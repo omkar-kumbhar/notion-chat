@@ -1,4 +1,5 @@
 import requests
+import time
 import json
 from src.utils.logger import get_logger
 from config.settings import NOTION_KEY
@@ -110,4 +111,39 @@ def process_search_results(search_results):
                     logger.debug(content)
             logger.debug("-------")
 
+
+# TODO: 10.20.23: Rate limits with respect to Notion API.
+def handle_rate_limit(api_call, *args, **kwargs):
+    """
+    A wrapper function to handle rate limits for API calls using exponential backoff.
+
+    Parameters:
+    - api_call (function): The API call function to be executed.
+    - *args, **kwargs: Arguments and keyword arguments to be passed to the api_call function.
+
+    Returns:
+    - The result of the API call function.
+
+    # Example usage:
+    # response = handle_rate_limit(search_notion_pages, arg1, arg2, kwarg1=value1)
+
+    """
+    max_retries = 5
+    wait = 0.5  # start with a half-second wait
+
+    for _ in range(max_retries):
+        response = api_call(*args, **kwargs)
+        
+        # Check if the response indicates a rate limit error (status code 429)
+        if response.status_code != 429:
+            return response
+
+        print(f"Rate limit exceeded. Waiting for {wait} seconds.")
+        time.sleep(wait)
+        wait *= 2  # double the wait time
+
+    # If we've reached here, it means we've retried max_retries times and still have the error.
+    # You can either raise an exception or return the last response.
+    print("Max retries reached. Returning the last response.")
+    return response
 
