@@ -3,6 +3,8 @@
 ## Author 
 Omkar Kumbhar
 
+## Overview
+
 This project integrates Notion with ChatGPT, allowing users to search for relevant content in Notion using ChatGPT and refine the search using FAISS.
 
 ## Current Features
@@ -41,14 +43,6 @@ This project integrates Notion with ChatGPT, allowing users to search for releva
 - **Performance Optimization**: As the data grows, optimize the search and retrieval mechanisms.
 - **Security**: Ensure that sensitive data, especially API keys, are securely stored and accessed.
 
-## Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) to get started.
-
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
----
-
-This README provides a clear overview of the current state of the project and outlines the future scope. Adjustments can be made based on the project's evolution and specific requirements.
