@@ -5,6 +5,7 @@ from config.settings import NOTION_KEY
 
 logger = get_logger(__name__)
 
+# TODO: ????? Move this to config/settings.py
 headers = {
     "Authorization": "Bearer " + NOTION_KEY,
     "Content-Type": "application/json",
@@ -12,6 +13,17 @@ headers = {
 }
 
 def search_notion_pages():
+    """
+    Description:
+        Search for pages in Notion.
+    Parameters:
+        None
+    Returns:
+        search_response.json() (dict): The JSON response from the Notion API.
+
+    TODO: 10.20.23: Add pagination support, and return a list of page IDs instead of the raw JSON response.
+    TODO: 10:20:23: You also need to take in arguments for the search parameters.
+    """
     try:
         logger.debug("Fetching pages from Notion")
         search_params = {"filter": {"value": "page", "property": "object"}}
@@ -26,6 +38,17 @@ def search_notion_pages():
         return {}
 
 def fetch_page_content(page_id):
+    """
+    Description:
+        Fetch the content of a page in Notion.
+    Parameters:
+        page_id (str): The ID of the page to fetch.
+    Returns:
+        blocks_response.json() (dict): The JSON response from the Notion API.
+
+    TODO: 10.20.23: Type check the page_id argument.
+
+    """
     try:
         logger.debug(f"Fetching page content for page ID {page_id}")
         blocks_response = requests.get(
@@ -39,6 +62,23 @@ def fetch_page_content(page_id):
         return {}
 
 def process_search_results(search_results):
+    """
+    Description:
+        Process the search results from Notion.
+        
+        TODO: 10.20.23:
+            You're going to want to change this function to do something more useful.
+            For example, get page_id, title, url, and content from the search results.
+            You can return it as a json dict, or pandas dataframe. Look for efficiency.
+            Idea is to send it over for downstream tasks like converting the json 
+            response into ada002 embeddings, inside a postgre database, etc.
+    Parameters:
+        search_results (dict): The search results from Notion.
+    
+    Returns:
+        None (for now)
+        
+    """
     if not isinstance(search_results, dict):
         logger.error(f"Unexpected search results format: {search_results}")
         return

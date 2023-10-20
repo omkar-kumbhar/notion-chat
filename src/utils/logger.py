@@ -2,6 +2,16 @@ import logging
 from config.settings import LOG_PATH
 
 def get_logger(name, level=logging.DEBUG, file_level=logging.DEBUG):
+    """
+    Description:
+        Create a logger with the specified name, log level, and file log level.
+    Parameters:
+        name (str): The name of the logger.
+        level (int): The log level for the console handler.
+        file_level (int): The log level for the file handler.
+    Returns:
+        logger (logging.Logger): The logger with the specified name, log level, and file log level.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.propagate = False  # Prevent the log messages from being duplicated in the console
