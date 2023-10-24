@@ -2,42 +2,63 @@
 # reference: https://huggingface.co/pszemraj/led-base-book-summary
 
 import torch
-from transformers import pipeline
+from transformers import pipeline, set_seed
 from joblib import Parallel, delayed
+from src.utils.logger import get_logger
 import os
-# reference: https://stackoverflow.com/questions/62691279/how-to-disable-tokenizers-parallelism-true-false-warning
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+# Ensure consistent results
+set_seed(42)
+
+# Check if TOKENIZERS_PARALLELISM is already set
+if "TOKENIZERS_PARALLELISM" not in os.environ:
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class Summarizer:
-    def __init__(self):
+    def __init__(self, hf_model="pszemraj/led-base-book-summary", device=None):
         """
         Initialize the summarizer.
         NOTE: This is a heavy object, so it should be initialized once and reused.
-        NOTE: Doesn't take any arguments yet, hardcoded for now.
         """
-        self.hf_model = "pszemraj/led-base-book-summary"
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = pipeline(task="summarization", model=self.hf_model, device=self.device)
-
-    def summarize(self,text):
-        """Summarize a text."""
-        result = self.model(text,
-                    min_length=8,
-                    max_length=256,
-                    no_repeat_ngram_size=3,
-                    encoder_no_repeat_ngram_size=3,
-                    repetition_penalty=3.5,
-                    num_beams=4,
-                    do_sample=False,
-                    early_stopping=True,
-                )
+        self.logger = get_logger(__name__)
         
-        return result[0]['summary_text']
-    
-    def summarize_parallel(self,texts):
+        self.hf_model = hf_model
+        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
+        
+        try:
+            self.model = pipeline(task="summarization", model=self.hf_model, device=self.device)
+            self.logger.info(f"Loaded model {self.hf_model} on device {self.device}")
+        except Exception as e:
+            self.logger.error(f"Failed to load the model. Error: {e}")
+            raise
+
+    def summarize(self, text):
+        """Summarize a text."""
+        try:
+            result = self.model(
+                text,
+                min_length=8,
+                max_length=256,
+                no_repeat_ngram_size=3,
+                encoder_no_repeat_ngram_size=3,
+                repetition_penalty=3.5,
+                num_beams=4,
+                do_sample=False,
+                early_stopping=True,
+            )
+            return result[0]['summary_text']
+        except Exception as e:
+            self.logger.error(f"Failed to summarize the text. Error: {e}")
+            return None
+
+    def summarize_parallel(self, texts):
         """Summarize a list of texts in parallel."""
-        result = Parallel(n_jobs=-1)(delayed(self.summarize)(text) for text in texts)
-        return result
+        try:
+            results = Parallel(n_jobs=-1)(delayed(self.summarize)(text) for text in texts)
+            return results
+        except Exception as e:
+            self.logger.error(f"Failed to summarize the texts in parallel. Error: {e}")
+            return [None for _ in texts]
     
 if __name__ == "__main__":
     sumy = Summarizer()
