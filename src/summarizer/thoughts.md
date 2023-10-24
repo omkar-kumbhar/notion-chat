@@ -32,3 +32,11 @@ Can lambda be used for summarizing? Unless someone has finetuned it.
 Remember, the main goal was for use already used models. Keep it as simple as possible.
 Probably chunking followed by summarizing is a good idea. Keeps the pipeline simple.
 You can also potentially rely on joblib for parallelizing the summarization process.
+
+## Final
+Lets start simple. 
+1. Chunking
+2. Summarizing
+
+### Future?
+https://huggingface.co/pszemraj/long-t5-tglobal-base-16384-book-summary#how-to-run-inference-over-a-very-long-30k-tokens-document-in-batches
