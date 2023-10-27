@@ -1,10 +1,12 @@
 import requests
+import time
 import json
 from src.utils.logger import get_logger
 from config.settings import NOTION_KEY
 
 logger = get_logger(__name__)
 
+# TODO: ????? Move this to config/settings.py
 headers = {
     "Authorization": "Bearer " + NOTION_KEY,
     "Content-Type": "application/json",
@@ -12,6 +14,17 @@ headers = {
 }
 
 def search_notion_pages():
+    """
+    Description:
+        Search for pages in Notion.
+    Parameters:
+        None
+    Returns:
+        search_response.json() (dict): The JSON response from the Notion API.
+
+    TODO: 10.20.23: Add pagination support, and return a list of page IDs instead of the raw JSON response.
+    TODO: 10:20:23: You also need to take in arguments for the search parameters.
+    """
     try:
         logger.debug("Fetching pages from Notion")
         search_params = {"filter": {"value": "page", "property": "object"}}
@@ -26,6 +39,17 @@ def search_notion_pages():
         return {}
 
 def fetch_page_content(page_id):
+    """
+    Description:
+        Fetch the content of a page in Notion.
+    Parameters:
+        page_id (str): The ID of the page to fetch.
+    Returns:
+        blocks_response.json() (dict): The JSON response from the Notion API.
+
+    TODO: 10.20.23: Type check the page_id argument.
+
+    """
     try:
         logger.debug(f"Fetching page content for page ID {page_id}")
         blocks_response = requests.get(
@@ -39,6 +63,23 @@ def fetch_page_content(page_id):
         return {}
 
 def process_search_results(search_results):
+    """
+    Description:
+        Process the search results from Notion.
+        
+        TODO: 10.20.23:
+            You're going to want to change this function to do something more useful.
+            For example, get page_id, title, url, and content from the search results.
+            You can return it as a json dict, or pandas dataframe. Look for efficiency.
+            Idea is to send it over for downstream tasks like converting the json 
+            response into ada002 embeddings, inside a postgre database, etc.
+    Parameters:
+        search_results (dict): The search results from Notion.
+    
+    Returns:
+        None (for now)
+        
+    """
     if not isinstance(search_results, dict):
         logger.error(f"Unexpected search results format: {search_results}")
         return
@@ -70,4 +111,39 @@ def process_search_results(search_results):
                     logger.debug(content)
             logger.debug("-------")
 
+
+# TODO: 10.20.23: Rate limits with respect to Notion API.
+def handle_rate_limit(api_call, *args, **kwargs):
+    """
+    A wrapper function to handle rate limits for API calls using exponential backoff.
+
+    Parameters:
+    - api_call (function): The API call function to be executed.
+    - *args, **kwargs: Arguments and keyword arguments to be passed to the api_call function.
+
+    Returns:
+    - The result of the API call function.
+
+    # Example usage:
+    # response = handle_rate_limit(search_notion_pages, arg1, arg2, kwarg1=value1)
+
+    """
+    max_retries = 5
+    wait = 0.5  # start with a half-second wait
+
+    for _ in range(max_retries):
+        response = api_call(*args, **kwargs)
+        
+        # Check if the response indicates a rate limit error (status code 429)
+        if response.status_code != 429:
+            return response
+
+        print(f"Rate limit exceeded. Waiting for {wait} seconds.")
+        time.sleep(wait)
+        wait *= 2  # double the wait time
+
+    # If we've reached here, it means we've retried max_retries times and still have the error.
+    # You can either raise an exception or return the last response.
+    print("Max retries reached. Returning the last response.")
+    return response
 
