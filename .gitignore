@@ -196,3 +196,6 @@ build/
 *.bak
 *.tmp
 *.temp
+
+# database
+.pgpass

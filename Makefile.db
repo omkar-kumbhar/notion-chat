@@ -1,0 +1,87 @@
+# Makefile for PostgreSQL Docker operations
+
+## __________________________________________________________
+## Author: Omkar Kumbhar
+## Run `make -f Makefile.db help` to understand what to run.
+## To make running easier, add Makefile.db -f to alias.
+## inside shell, run the next commands:
+## >> alias makedb='make -f Makefile.db'
+## >> source ~/.bashrc  # or source ~/.zshrc if you're using zsh
+## >> makedb start-db
+## __________________________________________________________
+include .env
+export
+
+# Name of the Docker Compose service for PostgreSQL
+SERVICE_NAME=postgres
+# Name of the Docker volume for PostgreSQL data
+VOLUME_NAME=notion-chat_pgdata
+
+.PHONY: start-db stop-db remove-db cleanup prune check-docker help reset-db logs
+
+# Display help information
+help:
+	@echo "Available targets:"
+	@echo "  start-db       : Start the PostgreSQL container and create the database."
+	@echo "  stop-db        : Stop the PostgreSQL container."
+	@echo "  remove-db      : Remove the PostgreSQL container and its volume."
+	@echo "  reset-db       : Reset the PostgreSQL database (stop, remove, and start)."
+	@echo "  logs           : View logs for the PostgreSQL container."
+	@echo "  cleanup        : Clean up unused Docker resources."
+	@echo "  prune          : Clean up unused Docker resources including volumes."
+	@echo "  check-docker   : Check Docker's status and start it if not running."
+
+# Check Docker status and start if not running
+check-docker:
+	@if ! docker info >/dev/null 2>&1; then \
+		echo "Docker is not running. Please start Docker Desktop."; \
+		exit 1; \
+	else \
+		echo "Docker is running."; \
+	fi
+
+start-db: check-docker
+	@echo "Starting PostgreSQL container..."
+	docker-compose up -d $(SERVICE_NAME)
+	@echo "Waiting for PostgreSQL to initialize..."
+	sleep 10
+	@echo "Checking if PostgreSQL is ready..."
+	@if docker-compose exec $(SERVICE_NAME) pg_isready -U ${POSTGRES_USER}; then \
+		echo "PostgreSQL is up and running!"; \
+	else \
+		echo "PostgreSQL is not ready. Please check logs or try again later."; \
+		exit 1; \
+	fi
+
+# Stop the PostgreSQL container
+stop-db:
+	@echo "Stopping PostgreSQL container..."
+	docker-compose stop $(SERVICE_NAME)
+
+# Remove the PostgreSQL container and volume
+remove-db:
+	@echo "Removing PostgreSQL container..."
+	docker-compose down
+	@if docker volume ls | grep $(VOLUME_NAME) > /dev/null; then \
+		echo "Removing Docker volume $(VOLUME_NAME)..."; \
+		docker volume rm $(VOLUME_NAME); \
+	else \
+		echo "Volume $(VOLUME_NAME) does not exist. Skipping removal."; \
+	fi
+
+# Reset the database
+reset-db: stop-db remove-db start-db
+
+# View logs for the PostgreSQL container
+logs:
+	docker-compose logs $(SERVICE_NAME)
+
+# Cleanup unused Docker resources
+cleanup:
+	@echo "Cleaning up unused Docker resources..."
+	docker system prune -f
+
+# Cleanup unused Docker resources including volumes
+prune:
+	@echo "Cleaning up unused Docker resources including volumes..."
+	docker system prune -f --volumes
