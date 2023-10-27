@@ -5,7 +5,7 @@ SERVICE_NAME=postgres
 # Name of the Docker volume for PostgreSQL data
 VOLUME_NAME=pgdata
 # Name for the PostgreSQL database
-DB_NAME=notion-db
+DB_NAME=notion_db
 
 .PHONY: start-db stop-db remove-db cleanup prune
 
