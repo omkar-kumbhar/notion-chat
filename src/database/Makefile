@@ -1,0 +1,42 @@
+# Makefile for PostgreSQL Docker operations
+
+# Name of the Docker Compose service for PostgreSQL
+SERVICE_NAME=postgres
+# Name of the Docker volume for PostgreSQL data
+VOLUME_NAME=pgdata
+# Name for the PostgreSQL database
+DB_NAME=notion-db
+
+.PHONY: start-db stop-db remove-db cleanup prune
+
+# Start the PostgreSQL container
+start-db:
+	@echo "Starting PostgreSQL container..."
+	docker-compose up -d $(SERVICE_NAME)
+	@echo "Waiting for PostgreSQL to initialize..."
+	sleep 10
+	@echo "Creating database named $(DB_NAME)..."
+	docker-compose exec $(SERVICE_NAME) createdb -U postgres $(DB_NAME)
+	@echo "Database $(DB_NAME) created."
+
+# Stop the PostgreSQL container
+stop-db:
+	@echo "Stopping PostgreSQL container..."
+	docker-compose stop $(SERVICE_NAME)
+
+# Remove the PostgreSQL container and volume
+remove-db:
+	@echo "Removing PostgreSQL container..."
+	docker-compose down
+	@echo "Removing Docker volume $(VOLUME_NAME)..."
+	docker volume rm $(VOLUME_NAME)
+
+# Cleanup unused Docker resources
+cleanup:
+	@echo "Cleaning up unused Docker resources..."
+	docker system prune -f
+
+# Cleanup unused Docker resources including volumes
+prune:
+	@echo "Cleaning up unused Docker resources including volumes..."
+	docker system prune -f --volumes
