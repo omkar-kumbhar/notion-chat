@@ -15,7 +15,7 @@ export
 # Name of the Docker Compose service for PostgreSQL
 SERVICE_NAME=postgres
 # Name of the Docker volume for PostgreSQL data
-VOLUME_NAME=pgdata
+VOLUME_NAME=notion-chat_pgdata
 
 .PHONY: start-db stop-db remove-db cleanup prune check-docker help reset-db logs
 
